@@ -4,20 +4,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const sendButton = document.getElementById("send-button");
   
     // Function to append messages to chat history
-    function appendMessage(content, sender) {
+    function appendMessage(role, content) {
       const messageDiv = document.createElement("div");
-      messageDiv.classList.add("message", sender === "user" ? "user-message" : "bot-message");
+      messageDiv.classList.add("message", role === "user" ? "user-message" : "bot-message");
       messageDiv.textContent = content;
       chatHistory.appendChild(messageDiv);
       chatHistory.scrollTop = chatHistory.scrollHeight;
     }
-  
+
+ 
     // Send message to server and handle response
     async function sendMessage() {
       const message = userInput.value.trim();
       if (!message) return;
   
-      appendMessage(message, "user");
+      appendMessage('user',message);
       userInput.value = "";
   
       try {
@@ -28,16 +29,23 @@ document.addEventListener("DOMContentLoaded", () => {
           },
           body: JSON.stringify({ message }),
         });
-  
         if (response.ok) {
           const data = await response.json();
-          appendMessage(data.reply, "bot");
-        } else {
-          appendMessage("Error: Unable to get a response", "bot");
+          // Clear the message display area
+          chatHistory.innerHTML = "";
+
+          // Render each message in the returned history
+          data.history.forEach((msg) => {
+            if(msg.role !== "system") {
+              appendMessage(msg.role, msg.content);
+            }
+          });
+       } else {
+            appendMessage("bot", "Error: Unable to get a response");
         }
-      } catch (error) {
-        console.error("Error:", error);
-        appendMessage("Error: Network issue", "bot");
+          } catch (error) {
+          console.log("Error:", error);
+          appendMessage("bot", "Error: Network issue");
       }
     }
   
@@ -49,4 +57,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
+
+  
   
