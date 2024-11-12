@@ -5,6 +5,7 @@ const path = require("path");
 const router = express.Router();
 const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
 const { HumanMessage, AIMessage } = require("@langchain/core/messages");
+const { applyCommands } = require("../utils/history");
 require("dotenv").config();
 
 // Initialize the model with the API key from environment variables
@@ -40,9 +41,26 @@ router.post("/", async (req, res) => {
     });
 
     // Invoke the model
+    console.log(messages)
     const response = await model.invoke(messages);
     const botReply = response.content;
 
+    function parseChatbotResponse(response) {
+      // Step 1: Strip backticks and any leading `json` marker
+      const jsonString = response.replace(/^```json\s*|\s*```$/g, '').trim();
+    
+      try {
+        // Step 2: Parse the JSON string into an object
+        const parsedObject = JSON.parse(jsonString);
+        return parsedObject;
+      } catch (error) {
+        console.error("Failed to parse JSON:", error);
+        return null;
+      }
+    }
+    const structuredResponse = parseChatbotResponse(botReply);
+    console.log(structuredResponse);
+    applyCommands(history, structuredResponse.actions);
     // Add bot's reply to history
     addToHistory("assistant", botReply);
 
