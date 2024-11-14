@@ -47,7 +47,7 @@ router.post("/", async (req, res) => {
 
     function parseChatbotResponse(response) {
       // Step 1: Strip backticks and any leading `json` marker
-      const jsonString = response.replace(/^```json\s*|\s*```$/g, '').trim();
+      const jsonString = response.trim().replace(/^```json\s*|\s*```$/g, '').trim();
     
       try {
         // Step 2: Parse the JSON string into an object
@@ -55,6 +55,7 @@ router.post("/", async (req, res) => {
         return parsedObject;
       } catch (error) {
         console.error("Failed to parse JSON:", error);
+        console.error("Response:", jsonString);
         return null;
       }
     }
